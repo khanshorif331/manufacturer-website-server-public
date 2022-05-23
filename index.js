@@ -3,7 +3,7 @@ const app = express()
 const port = process.env.PORT || 5000
 const cors = require('cors')
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb')
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 
 // middlewares
 app.use(cors())
@@ -21,11 +21,19 @@ async function run() {
 		await client.connect()
 		console.log('Database connected')
 		const productCollection = client.db('manufacturer').collection('products')
+		const orderCollection = client.db('manufacturer').collection('orders')
 
 		app.get('/products', async (req, res) => {
 			const query = {}
 			const products = await productCollection.find(query).toArray()
 			res.send(products)
+		})
+
+		app.get('/purchase/:id', async (req, res) => {
+			const id = req.params.id
+			const query = { _id: ObjectId(id) }
+			const product = await productCollection.findOne(query)
+			res.send(product)
 		})
 	} finally {
 	}
