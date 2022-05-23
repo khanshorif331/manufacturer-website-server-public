@@ -21,6 +21,12 @@ async function run() {
 		await client.connect()
 		console.log('Database connected')
 		const productCollection = client.db('manufacturer').collection('products')
+
+		app.get('/products', async (req, res) => {
+			const query = {}
+			const products = await productCollection.find(query).toArray()
+			res.send(products)
+		})
 	} finally {
 	}
 }
