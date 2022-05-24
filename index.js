@@ -3,6 +3,7 @@ const app = express()
 const port = process.env.PORT || 5000
 const cors = require('cors')
 require('dotenv').config()
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 
 // middlewares
@@ -22,6 +23,7 @@ async function run() {
 		console.log('Database connected')
 		const productCollection = client.db('manufacturer').collection('products')
 		const orderCollection = client.db('manufacturer').collection('orders')
+		const userCollection = client.db('manufacturer').collection('users')
 
 		app.get('/products', async (req, res) => {
 			const query = {}
@@ -39,6 +41,30 @@ async function run() {
 			const order = req.body
 			const result = await orderCollection.insertOne(order)
 			res.send(result)
+		})
+
+		// creating token and adding usercollection
+		app.put('/user/:email', async (req, res) => {
+			const email = req.params.email
+			const user = req.body
+			const filter = { email: email }
+			const options = { upsert: true }
+			const updateDoc = {
+				$set: user,
+			}
+			const result = await userCollection.updateOne(
+				filter,
+				updateDoc,
+				options
+			)
+
+			const token = jwt.sign(
+				{ email: email },
+				process.env.ACCESS_TOKEN_SECRET,
+				{ expiresIn: '1h' }
+			)
+
+			res.send({ result, token })
 		})
 	} finally {
 	}
