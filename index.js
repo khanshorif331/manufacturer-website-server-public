@@ -78,6 +78,7 @@ async function run() {
 			res.send(result)
 		})
 
+		// adding admin role
 		app.put(
 			'/user/admin/:email',
 			// verifyJWT,
@@ -89,6 +90,22 @@ async function run() {
 					$set: { role: 'admin' },
 				}
 				const result = await userCollection.updateOne(filter, updateDoc)
+				res.send(result)
+			}
+		)
+
+		// adding status
+		app.put(
+			'/order/shipped/:id',
+			// verifyJWT,
+			// verifyAdmin,
+			async (req, res) => {
+				const id = req.params.id
+				const filter = { _id: ObjectId(id) }
+				const updateDoc = {
+					$set: { status: 'shipped' },
+				}
+				const result = await orderCollection.updateOne(filter, updateDoc)
 				res.send(result)
 			}
 		)
