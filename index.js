@@ -75,6 +75,7 @@ async function run() {
 		// all orders for admin
 		app.get('/orders', async (req, res) => {
 			const result = await orderCollection.find().toArray()
+			res.send(result)
 		})
 
 		app.put(
