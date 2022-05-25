@@ -72,6 +72,26 @@ async function run() {
 			res.send(result)
 		})
 
+		// all orders for admin
+		app.get('/orders', async (req, res) => {
+			const result = await orderCollection.find().toArray()
+		})
+
+		app.put(
+			'/user/admin/:email',
+			// verifyJWT,
+			// verifyAdmin,
+			async (req, res) => {
+				const email = req.params.email
+				const filter = { email: email }
+				const updateDoc = {
+					$set: { role: 'admin' },
+				}
+				const result = await userCollection.updateOne(filter, updateDoc)
+				res.send(result)
+			}
+		)
+
 		// creating token and adding usercollection
 		app.put('/user/:email', async (req, res) => {
 			const email = req.params.email
