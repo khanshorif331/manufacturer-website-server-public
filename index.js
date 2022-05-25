@@ -38,10 +38,18 @@ async function run() {
 			res.send(result)
 		})
 
+		// delete order
 		app.delete('/myOrder/:id', async (req, res) => {
 			const id = req.params.id
 			const query = { _id: ObjectId(id) }
 			const result = await orderCollection.deleteOne(query)
+			res.send(result)
+		})
+		// delete user
+		app.delete('/user/:id', async (req, res) => {
+			const id = req.params.id
+			const query = { _id: ObjectId(id) }
+			const result = await userCollection.deleteOne(query)
 			res.send(result)
 		})
 
