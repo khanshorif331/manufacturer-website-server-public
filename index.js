@@ -34,9 +34,14 @@ async function run() {
 		app.get('/myOrders', async (req, res) => {
 			const email = req.query.email
 			const query = { email }
-			console.log(req.query)
 			const result = await orderCollection.find(query).toArray()
-			console.log('hello world')
+			res.send(result)
+		})
+
+		app.delete('/myOrder/:id', async (req, res) => {
+			const id = req.params.id
+			const query = { _id: ObjectId(id) }
+			const result = await orderCollection.deleteOne(query)
 			res.send(result)
 		})
 
