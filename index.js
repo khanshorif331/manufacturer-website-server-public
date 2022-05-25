@@ -31,6 +31,22 @@ async function run() {
 			res.send(products)
 		})
 
+		app.get('/myOrders', async (req, res) => {
+			const email = req.query.email
+			const query = { email }
+			console.log(req.query)
+			const result = await orderCollection.find(query).toArray()
+			console.log('hello world')
+			res.send(result)
+		})
+
+		// all users
+		app.get('/users', async (req, res) => {
+			const query = {}
+			const result = await userCollection.find(query).toArray()
+			res.send(result)
+		})
+
 		app.get('/purchase/:id', async (req, res) => {
 			const id = req.params.id
 			const query = { _id: ObjectId(id) }
@@ -47,6 +63,7 @@ async function run() {
 		app.put('/user/:email', async (req, res) => {
 			const email = req.params.email
 			const user = req.body
+			console.log(email, user)
 			const filter = { email: email }
 			const options = { upsert: true }
 			const updateDoc = {
@@ -57,13 +74,14 @@ async function run() {
 				updateDoc,
 				options
 			)
+			console.log(`${process.env.ACCESS_TOKEN_SECRET}`)
 
 			const token = jwt.sign(
 				{ email: email },
-				process.env.ACCESS_TOKEN_SECRET,
+				'c239c02477833f1aa393635e2eb65d74d6087de6caa66d399fa5b365e61e7fc0b8c380add7a76e40fe1faf66918a49231bd77ebafdb8b4b6622bc8561aca55e1',
+				// `${process.env.ACCESS_TOKEN_SECRET}`,
 				{ expiresIn: '1h' }
 			)
-
 			res.send({ result, token })
 		})
 	} finally {
