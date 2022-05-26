@@ -69,6 +69,19 @@ async function run() {
 			res.send(result)
 		})
 
+		// all reviews
+		app.get('/reviews', async (req, res) => {
+			const query = {}
+			const result = await reviewCollection.find(query).toArray()
+			res.send(result)
+		})
+		// post a review
+		app.post('/review', async (req, res) => {
+			const review = req.body
+			const result = await reviewCollection.insertOne(review)
+			res.send(result)
+		})
+
 		app.get('/purchase/:id', async (req, res) => {
 			const id = req.params.id
 			const query = { _id: ObjectId(id) }
