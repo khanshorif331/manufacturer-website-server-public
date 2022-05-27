@@ -61,6 +61,12 @@ async function run() {
 			const result = await productCollection.deleteOne(query)
 			res.send(result)
 		})
+		// add new product
+		app.post('/product', async (req, res) => {
+			const product = req.body
+			const result = await productCollection.insertOne(product)
+			res.send(result)
+		})
 
 		// all users
 		app.get('/users', async (req, res) => {
@@ -84,7 +90,6 @@ async function run() {
 					userInfo,
 				},
 			}
-			console.log(updateDoc)
 			const filter = { email: email }
 			const options = { upsert: true }
 			const result = await userCollection.updateOne(
