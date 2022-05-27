@@ -69,10 +69,29 @@ async function run() {
 			res.send(result)
 		})
 		// specific user info by id
-		app.get('/user', async (req, res) => {
+		app.get('/userInfo', async (req, res) => {
 			const email = req.query.email
 			const query = { email: email }
 			const result = await userCollection.findOne(query)
+			res.send(result)
+		})
+		// update userInfo
+		app.put('/userInfo', async (req, res) => {
+			const email = req.query.email
+			const userInfo = req.body
+			const updateDoc = {
+				$set: {
+					userInfo,
+				},
+			}
+			console.log(updateDoc)
+			const filter = { email: email }
+			const options = { upsert: true }
+			const result = await userCollection.updateOne(
+				filter,
+				updateDoc,
+				options
+			)
 			res.send(result)
 		})
 
