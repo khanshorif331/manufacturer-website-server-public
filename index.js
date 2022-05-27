@@ -5,6 +5,7 @@ const cors = require('cors')
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 // middlewares
 app.use(cors())
@@ -25,6 +26,7 @@ async function run() {
 		const orderCollection = client.db('manufacturer').collection('orders')
 		const userCollection = client.db('manufacturer').collection('users')
 		const reviewCollection = client.db('manufacturer').collection('reviews')
+		const paymentCollection = client.db('manufacturer').collection('payments')
 
 		app.get('/products', async (req, res) => {
 			const query = {}
@@ -37,6 +39,20 @@ async function run() {
 			const query = { email }
 			const result = await orderCollection.find(query).toArray()
 			res.send(result)
+		})
+
+		// stripe create payment intent
+		// verifyJWT
+		app.post('/create-payment-intent', async (req, res) => {
+			const service = req.body
+			const price = service.totalPrize
+			const amount = price * 100
+			const paymentIntent = await stripe.paymentIntents.create({
+				amount: amount,
+				currency: 'usd',
+				payment_method_types: ['card'],
+			})
+			res.send({ clientSecret: paymentIntent.client_secret })
 		})
 
 		// delete order
@@ -123,6 +139,22 @@ async function run() {
 			const order = req.body
 			const result = await orderCollection.insertOne(order)
 			res.send(result)
+		})
+
+		// update payment info
+		app.patch('/order/:id', async (req, res) => {
+			const id = req.params.id
+			const payment = req.body
+			const filter = { _id: ObjectId(id) }
+			const updateDoc = {
+				$set: {
+					paid: true,
+					transactionId: payment.transactionId,
+				},
+			}
+			const updatedOrder = await orderCollection.updateOne(filter, updateDoc)
+			const result = await paymentCollection.insertOne(payment)
+			res.send(updateDoc)
 		})
 
 		// all orders for admin
