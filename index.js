@@ -68,6 +68,13 @@ async function run() {
 			const result = await userCollection.find(query).toArray()
 			res.send(result)
 		})
+		// specific user info by id
+		app.get('/user', async (req, res) => {
+			const email = req.query.email
+			const query = { email: email }
+			const result = await userCollection.findOne(query)
+			res.send(result)
+		})
 
 		// all reviews
 		app.get('/reviews', async (req, res) => {
