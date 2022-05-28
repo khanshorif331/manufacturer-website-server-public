@@ -18,6 +18,23 @@ const client = new MongoClient(uri, {
 	serverApi: ServerApiVersion.v1,
 })
 
+function verifyJWT(req, res, next) {
+	const authHeader = req.headers.authorization
+	console.log(authHeader, 'authheader')
+	if (!authHeader) {
+		return res.status(401).send({ message: 'Unauthorized Access' })
+	}
+	const token = authHeader.split(' ')[1]
+	console.log(token, 'token')
+	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+		if (err) {
+			return res.status(403).send({ message: 'Forbidden Access' })
+		}
+		req.decoded = decoded
+		next()
+	})
+}
+
 async function run() {
 	try {
 		await client.connect()
@@ -42,8 +59,7 @@ async function run() {
 		})
 
 		// stripe create payment intent
-		// verifyJWT
-		app.post('/create-payment-intent', async (req, res) => {
+		app.post('/create-payment-intent', verifyJWT, async (req, res) => {
 			const service = req.body
 			const price = service.totalPrize
 			const amount = price * 100
@@ -54,6 +70,17 @@ async function run() {
 			})
 			res.send({ clientSecret: paymentIntent.client_secret })
 		})
+		const verifyAdmin = async (req, res, next) => {
+			const requester = req.decoded.email
+			const requesterAccount = await userCollection.findOne({
+				email: requester,
+			})
+			if (requesterAccount.role === 'admin') {
+				next()
+			} else {
+				res.status(403).send({ message: 'Forbidden Access' })
+			}
+		}
 
 		// verifying the admin
 		app.get('/admin/:email', async (req, res) => {
@@ -79,7 +106,7 @@ async function run() {
 		})
 
 		// delete product
-		app.delete('/product/:id', async (req, res) => {
+		app.delete('/product/:id', verifyJWT, async (req, res) => {
 			const id = req.params.id
 			const query = { _id: ObjectId(id) }
 			const result = await productCollection.deleteOne(query)
@@ -182,7 +209,7 @@ async function run() {
 		// adding admin role
 		app.put(
 			'/user/admin/:email',
-			// verifyJWT,
+			verifyJWT,
 			// verifyAdmin,
 			async (req, res) => {
 				const email = req.params.email
@@ -198,7 +225,7 @@ async function run() {
 		// adding status
 		app.put(
 			'/order/shipped/:id',
-			// verifyJWT,
+			verifyJWT,
 			// verifyAdmin,
 			async (req, res) => {
 				const id = req.params.id
@@ -215,7 +242,6 @@ async function run() {
 		app.put('/user/:email', async (req, res) => {
 			const email = req.params.email
 			const user = req.body
-			console.log(email, user)
 			const filter = { email: email }
 			const options = { upsert: true }
 			const updateDoc = {
@@ -226,12 +252,12 @@ async function run() {
 				updateDoc,
 				options
 			)
-			console.log(`${process.env.ACCESS_TOKEN_SECRET}`)
+			// console.log(`${process.env.ACCESS_TOKEN_SECRET}`)
 
 			const token = jwt.sign(
 				{ email: email },
-				'c239c02477833f1aa393635e2eb65d74d6087de6caa66d399fa5b365e61e7fc0b8c380add7a76e40fe1faf66918a49231bd77ebafdb8b4b6622bc8561aca55e1',
-				// `${process.env.ACCESS_TOKEN_SECRET}`,
+				// 'c239c02477833f1aa393635e2eb65d74d6087de6caa66d399fa5b365e61e7fc0b8c380add7a76e40fe1faf66918a49231bd77ebafdb8b4b6622bc8561aca55e1',
+				`${process.env.ACCESS_TOKEN_SECRET}`,
 				{ expiresIn: '1h' }
 			)
 			res.send({ result, token })
